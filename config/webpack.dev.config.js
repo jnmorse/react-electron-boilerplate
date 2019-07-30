@@ -4,29 +4,30 @@ const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const { spawn } = require('child_process');
 
-const isDevelopment = process.env.NODE_ENV === 'development';
-const isProduction = process.env.NODE_ENV === 'production';
+process.env.NODE_ENV = 'development';
+process.env.BABEL_ENV = 'development';
 
 module.exports = {
   name: 'client',
   target: 'electron-renderer',
   mode: 'development',
 
-  entry: [path.resolve(__dirname, '../src/index')],
+  entry: ['react-hot-loader/patch', path.resolve(__dirname, '../src/index')],
+
+  externals: ['react-router-dom', 'react-router'],
 
   output: {
     filename: '[name].js',
     chunkFilename: '[name].chunk.js',
-    path: path.resolve(__dirname, 'build')
+    path: path.resolve(__dirname, 'build'),
+    publicPath: '/',
+    libraryTarget: 'commonjs2'
   },
 
   devtool: 'eval-source-map',
 
   resolve: {
     extensions: ['.js', '.jsx'],
-    alias: {
-      'react-dom': '@hot-loader/react-dom'
-    },
     modules: [
       path.join(__dirname, '../node_modules'),
       path.join(__dirname, '../src')
@@ -38,7 +39,16 @@ module.exports = {
       {
         test: /\.jsx?$/u,
         exclude: /node_modules/u,
-        use: 'babel-loader'
+        use: [
+          {
+            loader: 'babel-loader'
+          }
+        ]
+      },
+      {
+        test: /\.(js|jsx)$/u,
+        loader: 'react-hot-loader/webpack',
+        include: /node_modules/u
       },
       {
         test: /\.css$/u,
@@ -80,6 +90,11 @@ module.exports = {
   plugins: [
     new webpack.HotModuleReplacementPlugin(),
     new webpack.NoEmitOnErrorsPlugin(),
+    new webpack.EnvironmentPlugin({
+      NODE_ENV: 'development',
+      BABEL_ENV: 'development'
+    }),
+    new webpack.LoaderOptionsPlugin({ debug: true }),
     new HtmlWebpackPlugin({
       template: 'src/index.html'
     })

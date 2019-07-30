@@ -10,21 +10,32 @@ const webpackConfig = require('./config/webpack.dev.config');
 const compiler = webpack(webpackConfig);
 
 const devServer = new WebpackDevServer(compiler, {
+  compress: true,
+  noInfo: true,
+  stats: 'errors-only',
+  inline: true,
+  lazy: false,
   hot: true,
-  stats: {
-    colors: true,
-    chunks: false,
-    children: false
+  headers: { 'Access-Control-Allow-Origin': '*' },
+  contentBase: path.join(__dirname, 'dist'),
+  watchOptions: {
+    aggregateTimeout: 300,
+    ignored: /node_modules/u,
+    poll: 100
   },
-  after() {
+  historyApiFallback: {
+    verbose: true,
+    disableDotRule: false
+  },
+  before() {
+    console.log('Starting Main Process...');
     spawn('electron', ['.'], {
       shell: true,
       env: process.env,
       stdio: 'inherit'
     })
       .on('close', code => process.exit(code))
-      // eslint-disable-next-line no-console
-      .on('error', error => console.error(error));
+      .on('error', spawnError => console.error(spawnError));
   }
 });
 
